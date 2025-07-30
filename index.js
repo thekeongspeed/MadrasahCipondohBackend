@@ -1221,11 +1221,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 
-const PORT = process.env.PORT || 3306;
-// Start server
+const PORT = process.env.PORT || 3000;
 db.sequelize.sync({ force: false }).then(() => {
   console.log('Database & tables synced successfully.');
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server berjalan di port: ${PORT}`);
   });
 }).catch(err => {
