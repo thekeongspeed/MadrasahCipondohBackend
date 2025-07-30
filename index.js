@@ -10,6 +10,7 @@ require('dotenv').config();
 const { auth, authAdmin } = require('./authMiddleware');
 
 
+
 // Initialize Express app
 const app = express();
 app.use(cors());
@@ -41,6 +42,8 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
 const db = require('./models');
 
 
+
+app.get('/', (req, res) => res.send('Server aktif!'));
 
 
 // Sync all models
