@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { User } = require('./models'); // Pastikan impor dari model Sequelize
+const { User } = require('./models'); 
 
 // 1. Middleware dasar untuk memeriksa apakah user sudah login
 function auth(req, res, next) {

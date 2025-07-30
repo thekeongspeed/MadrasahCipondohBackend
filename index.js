@@ -95,7 +95,7 @@ const uploadInstrument = multer({
   }
 });
 
-const PORT = process.env.PORT || 5000;
+
 
 // Helper functions
 
@@ -1218,7 +1218,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 
-
+const PORT = process.env.PORT || 3306;
 // Start server
 db.sequelize.sync({ force: false }).then(() => {
   console.log('Database & tables synced successfully.');
