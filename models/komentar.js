@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Komentar',
+    freezeTableName: true 
   });
   return Komentar;
 };

@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'RaportTemplate',
+    freezeTableName: true 
   });
   return RaportTemplate;
 };

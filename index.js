@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  logging: process.env.NODE_ENV === 'production' ? console.log : false,
 });
 
 // Test the database connection
@@ -44,7 +44,7 @@ const db = require('./models');
 
 
 // Sync all models
-sequelize.sync({ alter: process.env.NODE_ENV === 'development' })
+sequelize.sync({ alter: process.env.NODE_ENV === 'production' })
   .then(() => console.log('Database & tables synced.'))
   .catch(err => console.error('Error syncing database:', err));
 
@@ -1198,7 +1198,7 @@ app.use((err, req, res, next) => {
   // Handle other errors
   res.status(500).json({ 
     message: 'Terjadi kesalahan server',
-    error: process.env.NODE_ENV === 'development' ? err.message : {}
+    error: process.env.NODE_ENV === 'production' ? err.message : {}
   });
 });
 

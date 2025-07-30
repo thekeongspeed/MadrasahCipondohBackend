@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'RaportTemplateKolom',
+    freezeTableName: true 
   });
   return RaportTemplateKolom;
 };
