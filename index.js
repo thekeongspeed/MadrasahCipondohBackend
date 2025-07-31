@@ -787,7 +787,6 @@ app.get('/api/jurnal/rekap/:kelas/:bulan', auth, async (req, res) => {
 
 // Create journal (admin only)
 app.post('/api/jurnal', authAdmin, async (req, res) => {
-   console.log('Data Jurnal yang Diterima:', req.body);
   try {
     const jurnalBaru = await db.Jurnal.create({
       ...req.body,
@@ -976,7 +975,7 @@ app.get('/api/template/public/:kelas', auth, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Template tidak ditemukan' });
     }
 
-    res.json({ success: true, data: template });
+    res.json({ success: true, data: template || null });
 
   } catch (error) {
     console.error(`Error mengambil template publik untuk kelas ${req.params.kelas}:`, error);
@@ -1065,7 +1064,7 @@ app.get('/api/raport/:siswaId/:kelas/:periode', auth, async (req, res) => {
       return res.status(404).json({ message: 'Data belum tersedia' });
     }
     
-    res.json({ data: raport });
+    res.json({ data: raport || null });
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }
