@@ -13,13 +13,29 @@ const { auth, authAdmin } = require('./authMiddleware');
 
 // Initialize Express app
 const app = express();
-app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
 });
+
+
+const whitelist = ['http://localhost:5173', 'https://madrasah.cipondoh.site'];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
+
 
 // Database connection
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
@@ -1205,19 +1221,7 @@ app.use((err, req, res, next) => {
 });
 
 
-const whitelist = ['http://localhost:5173', 'https://madrasah.cipondoh.site'];
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  optionsSuccessStatus: 200
-};
 
-app.use(cors(corsOptions));
 
 
 const PORT = process.env.PORT || 3000;
