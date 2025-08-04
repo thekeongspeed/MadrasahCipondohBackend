@@ -540,6 +540,42 @@ app.post('/api/absensi', authAdmin, async (req, res) => {
 
 
 
+app.put('/api/absensi/:id', auth, async (req, res) => {
+  try {
+    const { status, keterangan } = req.body;
+    const attendanceId = req.params.id;
+    const loggedInUser = req.user;
+
+    const attendanceRecord = await db.Absensi.findByPk(attendanceId);
+
+    if (!attendanceRecord) {
+      return res.status(404).json({ success: false, message: 'Data absensi tidak ditemukan.' });
+    }
+
+     if (loggedInUser.role !== 'admin' && attendanceRecord.userId !== loggedInUser.id) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak. Anda tidak memiliki izin untuk mengedit data ini.' });
+    }
+
+    attendanceRecord.status = status;
+    attendanceRecord.keterangan = (status === 'Izin' || status === 'Sakit') ? keterangan : null;
+    
+
+    if (loggedInUser.role === 'admin') {
+      attendanceRecord.markedBy = 'admin';
+    }
+
+    await attendanceRecord.save();
+
+    res.status(200).json({ success: true, message: 'Absensi berhasil diperbarui!', data: attendanceRecord });
+
+  } catch (error) {
+    console.error('Error saat update absensi:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
+  }
+});
+
+
+
 app.get('/api/absensi/status/:userId/:tanggal', auth, async (req, res) => {
   try {
     const { userId, tanggal } = req.params;
