@@ -17,7 +17,19 @@ module.exports = (sequelize, DataTypes) => {
     tanggal: DataTypes.DATE,
     kelas: DataTypes.STRING,
     userId: DataTypes.INTEGER,
-    status: DataTypes.STRING
+    status: {
+        type: DataTypes.ENUM('Hadir', 'Izin', 'Sakit', 'Alpa'), 
+        allowNull: false
+    },
+    keterangan: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    markedBy: {
+        type: DataTypes.ENUM('user', 'admin'),
+        defaultValue: 'user'
+    }
+
   }, {
     sequelize,
     modelName: 'Absensi',

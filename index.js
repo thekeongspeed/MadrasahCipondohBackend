@@ -512,37 +512,104 @@ app.get('/api/absensi/rekap/:kelas/:bulan', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
   }
 });
+
+
 app.post('/api/absensi', authAdmin, async (req, res) => {
-  const t = await sequelize.transaction();
-  
   try {
     const { kelas, tanggal, absensi: absensiData } = req.body;
-    
-    await db.Absensi.destroy({ 
-      where: { 
-        kelas: kelas,
-        tanggal: new Date(tanggal)
-      },
-      transaction: t
+
+    const recordsToUpsert = absensiData.map(item => ({
+      tanggal: new Date(tanggal),
+      kelas: kelas,
+      userId: item.userId,
+      status: item.status,
+      markedBy: 'admin' 
+    }));
+
+   
+    const result = await db.Absensi.bulkCreate(recordsToUpsert, {
+      updateOnDuplicate: ["status", "markedBy"] 
     });
 
-    const newAbsensi = await db.Absensi.bulkCreate(
-      absensiData.map(item => ({
-        tanggal: new Date(tanggal),
-        kelas: kelas,
-        userId: item.userId,
-        status: item.status
-      })),
-      { transaction: t }
-    );
-
-    await t.commit();
-    res.status(200).json({ message: 'Absensi berhasil disimpan', data: newAbsensi });
+    res.status(200).json({ message: 'Absensi berhasil disimpan', data: result });
   } catch (error) {
-    await t.rollback();
+    console.error('Gagal menyimpan absensi (admin):', error);
     res.status(400).json({ message: 'Gagal menyimpan absensi' });
   }
 });
+
+
+
+app.get('/api/absensi/status/:userId/:tanggal', auth, async (req, res) => {
+  try {
+    const { userId, tanggal } = req.params;
+    const loggedInUser = req.user;
+
+   
+    if (loggedInUser.role !== 'admin' && String(loggedInUser.id) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak. Anda tidak memiliki izin.' });
+    }
+
+    const attendanceRecord = await db.Absensi.findOne({
+      where: {
+        userId: userId,
+        tanggal: new Date(tanggal)
+      }
+    });
+
+    if (!attendanceRecord) {
+      return res.status(404).json({ success: false, message: 'Data absensi untuk hari ini belum ada.' });
+    }
+
+    res.json(attendanceRecord);
+
+  } catch (error) {
+    console.error('Error saat memeriksa status absensi:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
+  }
+});
+
+
+
+
+app.post('/api/absensi/mandiri', auth, async (req, res) => {
+  try {
+    const { tanggal, status, kelas, keterangan } = req.body;
+    const userId = req.user.id;
+
+    if (!tanggal || !status || !kelas) {
+      return res.status(400).json({ success: false, message: 'Data tidak lengkap.' });
+    }
+    if ((status === 'Izin' || status === 'Sakit') && !keterangan) {
+      return res.status(400).json({ success: false, message: 'Keterangan wajib diisi.' });
+    }
+
+    // Gunakan findOrCreate untuk menangani kasus data sudah ada
+    const [record, created] = await db.Absensi.findOrCreate({
+      where: { userId: userId, tanggal: new Date(tanggal) },
+      defaults: {
+        status,
+        kelas,
+        keterangan: keterangan || null,
+        markedBy: 'user'
+      }
+    });
+
+    if (!created) {
+      return res.status(409).json({ success: false, message: 'Anda sudah melakukan absensi hari ini.' });
+    }
+
+    res.status(201).json({ success: true, message: 'Kehadiran berhasil dicatat!', data: record });
+  } catch (error) {
+    console.error('Error saat absensi mandiri:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
+  }
+});
+
+
+
+
+
 
 // ----- ANNOUNCEMENT ROUTES -----
 // ... (semua rute /api/pengumuman Anda di sini)
