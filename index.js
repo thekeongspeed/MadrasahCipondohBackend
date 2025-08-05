@@ -662,6 +662,48 @@ app.post('/api/absensi/mandiri', auth, async (req, res) => {
 });
 
 
+app.post('/api/absensi/admin', authAdmin, async (req, res) => {
+  try {
+
+    const { tanggal, status, kelas, keterangan, userId } = req.body;
+
+    if (!tanggal || !status || !kelas || !userId) {
+      return res.status(400).json({ success: false, message: 'Data tidak lengkap (memerlukan tanggal, status, kelas, dan userId).' });
+    }
+
+    
+    let record = await db.Absensi.findOne({
+      where: { userId: userId, tanggal: new Date(tanggal) }
+    });
+
+    if (record) {
+      
+      record.status = status;
+      record.keterangan = (status === 'Izin' || status === 'Sakit') ? keterangan : null;
+      record.markedBy = 'admin'; 
+      await record.save();
+      res.status(200).json({ success: true, message: 'Absensi berhasil diperbarui!', data: record });
+    } else {
+  
+      const newRecord = await db.Absensi.create({
+        userId,
+        tanggal: new Date(tanggal),
+        status,
+        kelas,
+        keterangan: keterangan || null,
+        markedBy: 'admin'
+      });
+      res.status(201).json({ success: true, message: 'Absensi berhasil dibuat!', data: newRecord });
+    }
+
+  } catch (error) {
+    console.error('Error saat admin mengubah absensi:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
+  }
+});
+
+
+
 // ----- ANNOUNCEMENT ROUTES -----
 // ... (semua rute /api/pengumuman Anda di sini)
 app.get('/api/pengumuman/:kelas', auth, async (req, res) => {
