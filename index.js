@@ -304,7 +304,9 @@ app.get('/api/users/profil/:id', auth, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-app.get('/api/users/kelas/:kelas', auth, async (req, res) => {
+
+
+app.get('/api/users/kelas/:namaKelas', auth, async (req, res) => {
   try {
     const allUsers = await db.User.findAll({ 
       where: { role: 'user' },
@@ -319,18 +321,30 @@ app.get('/api/users/kelas/:kelas', auth, async (req, res) => {
       'pra-nikah': { min: 19, max: 100 }
     };
 
-    const kelasKey = req.params.kelas.toLowerCase();
+    const kelasKey = req.params.namaKelas.toLowerCase(); 
     const targetRange = ageRanges[kelasKey];
     
     if (!targetRange) {
       return res.status(400).json({ message: 'Kelas tidak valid' });
     }
 
+   
     const calculateAge = (dob) => {
       if (!dob) return 0;
-      return new Date().getFullYear() - new Date(dob).getFullYear();
+      const birthDate = new Date(dob);
+      const today = new Date();
+      
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDifference = today.getMonth() - birthDate.getMonth();
+      
+    
+      if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      return age;
     };
-
+   
     const filteredUsers = allUsers.filter(user => {
       const age = calculateAge(user.dateOfBirth);
       return age >= targetRange.min && age <= targetRange.max;
@@ -338,9 +352,12 @@ app.get('/api/users/kelas/:kelas', auth, async (req, res) => {
 
     res.json(filteredUsers);
   } catch (error) {
+    console.error('Error saat mengambil pengguna berdasarkan usia:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+
 app.put('/api/users/:id', authAdmin, async (req, res) => {
   try {
     const { password, ...otherData } = req.body;
@@ -372,6 +389,8 @@ app.put('/api/users/:id', authAdmin, async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+
 app.delete('/api/users/:id', authAdmin, async (req, res) => {
   try {
     const user = await db.User.findByPk(req.params.id);
@@ -641,10 +660,6 @@ app.post('/api/absensi/mandiri', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
   }
 });
-
-
-
-
 
 
 // ----- ANNOUNCEMENT ROUTES -----
