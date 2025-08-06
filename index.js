@@ -703,6 +703,39 @@ app.post('/api/absensi/admin', authAdmin, async (req, res) => {
 });
 
 
+app.delete('/api/absensi/:id', authAdmin, async (req, res) => {
+ 
+  try {
+  
+    const { id } = req.params;
+
+    const attendanceRecord = await db.Absensi.findByPk(id);
+
+    if (!attendanceRecord) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Data absensi tidak ditemukan.' 
+      });
+    }
+
+     await attendanceRecord.destroy();
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Absensi berhasil dihapus.' 
+    });
+
+  } catch (error) {
+    
+    console.error('Error saat menghapus absensi:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Terjadi kesalahan pada server.' 
+    });
+  }
+});
+
+
 
 // ----- ANNOUNCEMENT ROUTES -----
 // ... (semua rute /api/pengumuman Anda di sini)
