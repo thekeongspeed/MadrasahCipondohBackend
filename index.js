@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -5,13 +6,13 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Sequelize, DataTypes, Op } = require('sequelize');
-require('dotenv').config(); 
+const { Sequelize, DataTypes, Op } = require('sequelize'); 
 const { auth, authAdmin } = require('./authMiddleware');
+const app = express();
+
 
 // ==================== INISIALISASI & KONFIGURASI UTAMA ====================
 
-const app = express();
 
 // 1. Konfigurasi CORS (ditempatkan di paling atas agar berlaku untuk semua request)
 const whitelist = ['http://localhost:5173', 'https://madrasah.cipondoh.site'];
@@ -27,42 +28,17 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// 2. Middleware Body Parser
+
 app.use(express.json());
 
-// 3. Middleware untuk menyajikan file statis (gambar, dll.)
-// Cukup deklarasikan satu kali di sini.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 4. Middleware untuk header keamanan (opsional, tapi baik untuk ada)
 app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
 });
 
 
-// ==================== KONEKSI & SINKRONISASI DATABASE ====================
-
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  dialect: 'mysql',
-  dialectOptions: {
-     ssl: {
-      ca: fs.readFileSync(path.join(__dirname, 'ca.pem'))
-    }
-  }
-});
-
-
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
-})();
 
 // Initialize models
 const db = require('./models');
@@ -1249,11 +1225,23 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-db.sequelize.sync({ force: false }).then(() => {
-  console.log('Database & tables synced successfully.');
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server berjalan di port: ${PORT}`);
-  });
-}).catch(err => {
-  console.error('Failed to sync database:', err);
-});
+
+const startServer = async () => {
+  try {
+    await db.sequelize.authenticate();
+    console.log('Database connection has been established successfully.');
+
+    await db.sequelize.sync({ force: false });
+    console.log('Database & tables synced successfully.');
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server is running on port: ${PORT}`);
+    });
+  } catch (err) {
+  
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+};
+
+startServer();
