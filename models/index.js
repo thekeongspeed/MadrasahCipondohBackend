@@ -54,11 +54,10 @@ fs
   });
 
 // Bagian ini menjalankan fungsi asosiasi jika ada (misal: User.hasMany(Post))
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
+if (fs.existsSync(path.join(__dirname, 'associations.js'))) {
+  require(path.join(__dirname, 'associations.js'))(db);
+}
+
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
