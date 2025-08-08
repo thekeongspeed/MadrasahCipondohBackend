@@ -43,7 +43,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     timestamps: true,
-    paranoid: true // Enable soft delete
+    paranoid: true 
   });
 
   // Instance methods
