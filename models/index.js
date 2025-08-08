@@ -3,41 +3,62 @@
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
-require('dotenv').config();
-
 const basename = path.basename(__filename);
+
+// Tentukan environment saat ini. Jika tidak di-set, anggap 'development'.
+// Railway secara otomatis men-set NODE_ENV menjadi 'production'.
+const env = process.env.NODE_ENV || 'development';
+
+// Muat file konfigurasi berdasarkan environment yang sedang berjalan.
+const config = require(__dirname + '/../config/config.json')[env];
 const db = {};
 
-// 1. Inisialisasi koneksi Sequelize dari .env
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-  host: process.env.DB_HOST,
-  dialect: 'mysql',
-  logging: false, // Set ke console.log untuk melihat query SQL saat debugging
-});
+let sequelize;
+// Bagian ini akan menggunakan konfigurasi dari config.json
+if (config.use_env_variable) {
+  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+} else {
+  // ====================================================================
+  // === INI ADALAH BAGIAN KUNCI YANG KITA MODIFIKASI SECARA BENAR ===
+  // ====================================================================
 
-// 2. Memuat semua file model dari direktori ini secara dinamis
+  // Kita hanya menambahkan konfigurasi SSL jika environment adalah 'production'
+  if (env === 'production') {
+    // Tambahkan dialectOptions untuk SSL ke dalam objek config
+    config.dialectOptions = {
+      ssl: {
+        ca: fs.readFileSync(path.join(__dirname, '../ca.pem'))
+      }
+    };
+  }
+
+  // Gunakan objek config yang sudah final (yang mungkin sudah ditambahkan SSL)
+  // untuk membuat koneksi Sequelize.
+  sequelize = new Sequelize(config.database, config.username, config.password, config);
+}
+
+// Bagian ini memuat semua file model (User.js, Product.js, dll) secara otomatis
 fs
   .readdirSync(__dirname)
   .filter(file => {
     return (
       file.indexOf('.') !== 0 &&
       file !== basename &&
-      file !== 'associations.js' && // Jangan load file associations di sini
-      file.slice(-3) === '.js'
+      file.slice(-3) === '.js' &&
+      file.indexOf('.test.js') === -1
     );
   })
   .forEach(file => {
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
-    console.log(`Model loaded: ${model.name}`);
   });
 
-// 3. Panggil file associations SETELAH semua model dimuat
-// Ini adalah bagian kunci yang memperbaiki masalah Anda
-if (fs.existsSync(path.join(__dirname, 'associations.js'))) {
-  require('./associations.js')(db);
-  console.log('All associations have been set up successfully.');
-}
+// Bagian ini menjalankan fungsi asosiasi jika ada (misal: User.hasMany(Post))
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
