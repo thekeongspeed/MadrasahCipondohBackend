@@ -9,7 +9,7 @@ const basename = path.basename(__filename);
 const db = {};
 
 // 1. Inisialisasi koneksi Sequelize dari .env
-const caPath = path.resolve(__dirname, '..', 'config', 'ca.pem'); // Sesuaikan path ini dengan lokasi file Anda
+const caPath = path.resolve(__dirname, '..', 'ca.pem'); // Sesuaikan path ini dengan lokasi file Anda
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -22,8 +22,7 @@ const sequelize = new Sequelize(
     dialectOptions: {
       // INI BAGIAN YANG PALING PENTING
       ssl: {
-        // rejectUnauthorized akan menolak koneksi jika sertifikat tidak valid.
-        // Sebaiknya selalu true di produksi.
+     
         rejectUnauthorized: true, 
         // Membaca dan menggunakan file sertifikat CA Anda
         ca: fs.readFileSync(caPath)
