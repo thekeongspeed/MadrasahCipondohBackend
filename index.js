@@ -9,61 +9,11 @@ const fs = require('fs');
 const { Sequelize, DataTypes, Op } = require('sequelize'); 
 const { auth, authAdmin } = require('./authMiddleware');
 const app = express();
-
-
-// ==================== INISIALISASI & KONFIGURASI UTAMA ====================
-
-
-// 1. Konfigurasi CORS (ditempatkan di paling atas agar berlaku untuk semua request)
-const whitelist = ['http://localhost:5173', 'https://madrasah.cipondoh.site'];
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
-
-
-app.use(express.json());
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-});
-
-
-// ==================== KONEKSI & SINKRONISASI DATABASE ====================
-
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  dialect: 'mysql',
-  dialectOptions: {
-     ssl: {
-      ca: fs.readFileSync(path.join(__dirname, 'ca.pem'))
-    }
-  }
-});
-
-
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
-})();
-
-// Initialize models
+// connection
 const db = require('./models');
+
+
+
 
 
 // ==================== KONFIGURASI UPLOAD FILE (MULTER) ====================
