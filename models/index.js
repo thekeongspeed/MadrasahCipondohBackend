@@ -9,11 +9,28 @@ const basename = path.basename(__filename);
 const db = {};
 
 // 1. Inisialisasi koneksi Sequelize dari .env
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-  host: process.env.DB_HOST,
-  dialect: 'mysql',
-  logging: false, // Set ke console.log untuk melihat query SQL saat debugging
-});
+const caPath = path.resolve(__dirname, '..', 'config', 'ca.pem'); // Sesuaikan path ini dengan lokasi file Anda
+
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: 'mysql', // TiDB Cloud kompatibel dengan dialek mysql
+    dialectOptions: {
+      // INI BAGIAN YANG PALING PENTING
+      ssl: {
+        // rejectUnauthorized akan menolak koneksi jika sertifikat tidak valid.
+        // Sebaiknya selalu true di produksi.
+        rejectUnauthorized: true, 
+        // Membaca dan menggunakan file sertifikat CA Anda
+        ca: fs.readFileSync(caPath)
+      }
+    }
+  }
+);
 
 // 2. Memuat semua file model dari direktori ini secara dinamis
 fs
