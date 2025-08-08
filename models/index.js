@@ -9,7 +9,7 @@ const basename = path.basename(__filename);
 const db = {};
 
 // 1. Inisialisasi koneksi Sequelize dari .env
-const caPath = path.resolve(__dirname, '..', 'config', 'ca.pem'); // Sesuaikan path ini dengan lokasi file Anda
+const caPath = path.resolve(__dirname, '..', 'ca.pem'); // Sesuaikan path ini dengan lokasi file Anda
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
