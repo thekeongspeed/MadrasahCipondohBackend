@@ -3,14 +3,27 @@
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
-require('dotenv').config();
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
 
 const basename = path.basename(__filename);
 const db = {};
 
-// 1. Inisialisasi koneksi Sequelize dari .env
-const caPath = path.resolve(__dirname, '..', 'ca.pem'); // Sesuaikan path ini dengan lokasi file Anda
+// Pastikan semua environment variable penting terisi
+const requiredEnv = ['DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT'];
+requiredEnv.forEach((key) => {
+  if (!process.env[key] || process.env[key].trim() === '') {
+    throw new Error(`Environment variable ${key} belum di-set!`);
+  }
+});
 
+// Path ke file sertifikat SSL
+const caPath = path.resolve(__dirname, '..', 'ca.pem');
+if (!fs.existsSync(caPath)) {
+  throw new Error(`File sertifikat CA tidak ditemukan: ${caPath}`);
+}
+
+// Inisialisasi Sequelize
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
@@ -18,39 +31,34 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: 'mysql', // TiDB Cloud kompatibel dengan dialek mysql
+    dialect: 'mysql',
     dialectOptions: {
-      // INI BAGIAN YANG PALING PENTING
       ssl: {
-        // rejectUnauthorized akan menolak koneksi jika sertifikat tidak valid.
-        // Sebaiknya selalu true di produksi.
-        rejectUnauthorized: true, 
-        // Membaca dan menggunakan file sertifikat CA Anda
-        ca: fs.readFileSync(caPath)
-      }
-    }
+        rejectUnauthorized: true,
+        ca: fs.readFileSync(caPath),
+      },
+    },
+    logging: false, // matiin log query kalau nggak perlu
   }
 );
 
-// 2. Memuat semua file model dari direktori ini secara dinamis
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
+// Load semua model
+fs.readdirSync(__dirname)
+  .filter((file) => {
     return (
       file.indexOf('.') !== 0 &&
       file !== basename &&
-      file !== 'associations.js' && // Jangan load file associations di sini
+      file !== 'associations.js' &&
       file.slice(-3) === '.js'
     );
   })
-  .forEach(file => {
+  .forEach((file) => {
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
     console.log(`Model loaded: ${model.name}`);
   });
 
-// 3. Panggil file associations SETELAH semua model dimuat
-// Ini adalah bagian kunci yang memperbaiki masalah Anda
+// Load associations kalau ada
 if (fs.existsSync(path.join(__dirname, 'associations.js'))) {
   require('./associations.js')(db);
   console.log('All associations have been set up successfully.');
