@@ -13,6 +13,17 @@ const app = express();
 const db = require('./models');
 
 
+const corsOptions = {
+  origin: ['http://localhost:5173', 'https://madrasah.cipondoh.site']
+};
+
+app.use(cors(corsOptions));
+// ===================================================================
+
+app.use(express.json());
+
+
+
 // ==================== KONFIGURASI UPLOAD FILE (MULTER) ====================
 
 const profileStorage = multer.diskStorage({
