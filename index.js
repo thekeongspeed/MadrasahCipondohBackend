@@ -834,6 +834,7 @@ app.delete('/api/pengumuman/:pengumumanId/komentar/:komentarId', authAdmin, asyn
 app.get('/api/jurnal/rekap/:kelas/:bulan', auth, async (req, res) => {
   try {
     const { kelas, bulan } = req.params;
+    const sequelize = db.sequelize;
     const rekapJurnal = await db.Jurnal.findAll({
       where: {
         kelas: kelas,
@@ -857,6 +858,8 @@ app.get('/api/jurnal/rekap/:kelas/:bulan', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 });
+
+
 app.post('/api/jurnal', authAdmin, async (req, res) => {
   try {
     const jurnalBaru = await db.Jurnal.create({
@@ -869,6 +872,8 @@ app.post('/api/jurnal', authAdmin, async (req, res) => {
     res.status(400).json({ message: 'Gagal menyimpan jurnal' });
   }
 });
+
+
 app.put('/api/jurnal/:id', authAdmin, async (req, res) => {
   try {
     const { tanggal, materi, keterangan } = req.body;
@@ -887,6 +892,7 @@ app.put('/api/jurnal/:id', authAdmin, async (req, res) => {
     res.status(400).json({ message: 'Gagal mengupdate jurnal' });
   }
 });
+
 app.delete('/api/jurnal/:id', authAdmin, async (req, res) => {
   try {
     const deleted = await db.Jurnal.destroy({
