@@ -13,6 +13,8 @@ const app = express();
 const db = require('./models');
 
 
+
+
 const corsOptions = {
   origin: ['http://localhost:5173', 'https://madrasah.cipondoh.site']
 };
@@ -21,7 +23,7 @@ app.use(cors(corsOptions));
 // ===================================================================
 
 app.use(express.json());
-
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 
 // ==================== KONFIGURASI UPLOAD FILE (MULTER) ====================
@@ -36,9 +38,10 @@ const profileStorage = multer.diskStorage({
     cb(null, 'profile-' + Date.now() + path.extname(file.originalname));
   }
 });
+
 const upload = multer({ 
   storage: profileStorage,
-  limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
+  limits: { fileSize: 2 * 1024 * 1024 }
 });
 
 const instrumentStorage = multer.diskStorage({
@@ -52,6 +55,7 @@ const instrumentStorage = multer.diskStorage({
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
+
 const uploadInstrument = multer({ 
   storage: instrumentStorage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
