@@ -58,7 +58,7 @@ const instrumentStorage = multer.diskStorage({
 
 const uploadInstrument = multer({ 
   storage: instrumentStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/pdf') {
       cb(null, true);
@@ -939,6 +939,7 @@ app.get('/api/instrumen/:kelas/:jenis', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
   }
 });
+
 app.get('/api/instrumen/:kelas/:jenis/files', auth, async (req, res) => {
   try {
     const { kelas, jenis } = req.params;
@@ -955,8 +956,9 @@ app.get('/api/instrumen/:kelas/:jenis/files', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 });
+
 app.post('/api/instrumen', authAdmin, uploadInstrument.single('file'), async (req, res) => {
-  const t = await sequelize.transaction();
+  const t = await db.sequelize.transaction();
   
   try {
     const { kelas, jenis } = req.body;
@@ -984,6 +986,7 @@ app.post('/api/instrumen', authAdmin, uploadInstrument.single('file'), async (re
     res.status(400).json({ message: 'Gagal mengupload file' });
   }
 });
+
 app.delete('/api/instrumen/:id', authAdmin, async (req, res) => {
   try {
     const instrument = await db.Instrument.findByPk(req.params.id);
